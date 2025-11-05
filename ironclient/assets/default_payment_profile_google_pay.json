@@ -1,0 +1,47 @@
+{
+  "provider": "google_pay",
+  "data": {
+    "environment": "TEST",
+    "apiVersion": 2,
+    "apiVersionMinor": 0,
+    "merchantInfo": {
+      "merchantName": "IronCircles Inc",
+      "merchantId" : "536906701968119486"
+    },
+    "allowedPaymentMethods": [
+      {
+        "type": "CARD",
+        "parameters": {
+          "allowedAuthMethods": [
+            "PAN_ONLY",
+            "CRYPTOGRAM_3DS"
+          ],
+          "allowedCardNetworks": [
+            "AMEX",
+            "DISCOVER",
+            "INTERAC",
+            "JCB",
+            "MASTERCARD",
+            "MIR",
+            "VISA"
+          ]
+        },
+        "tokenizationSpecification": {
+          "type": "PAYMENT_GATEWAY",
+          "parameters": {
+            "gateway": "stripe",
+            "stripe:version": "2018-10-31",
+            "stripe:publishableKey": "pk_test_51Loy06LQ6YnFm63h8rExBYqFCQZ260jPqzdFgNIbjVOkFIfQhAcwMCzfDrDgKrgDC32SKSeK8P9Xzf4BlL7DDKTb00xB0LtWKi"
+          }
+        }
+      }
+    ],
+    "transactionInfo": {
+      "totalPriceStatus": "ESTIMATED",
+      "totalPriceLabel": "Privacy+ monthly subscription",
+      "totalPrice": "1.99",
+      "currencyCode": "USD"
+    }
+
+  }
+}

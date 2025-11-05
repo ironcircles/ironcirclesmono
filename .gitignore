@@ -6,8 +6,6 @@ package-lock.json
 build/
 dist/
 *.log
-# Allow ironclient build directory (remove this line if you want to ignore it)
-!ironclient/build/
 
 # Environment variables
 .env
@@ -16,6 +14,14 @@ dist/
 # Firebase Admin SDK (sensitive credentials)
 ironapi/ironfurnace-a10e7-firebase-adminsdk-p35g8-8cae172dc5.json
 **/firebase-adminsdk-*.json
+
+# Flutter/Android sensitive files (ironclient)
+ironclient/android/app/google-services.json
+ironclient/android/app/*.jks
+ironclient/android/key.properties
+ironclient/android/local.properties
+ironclient/**/GoogleService-Info.plist
+ironclient/ios/push.apns
 
 # IDE
 .vscode/
