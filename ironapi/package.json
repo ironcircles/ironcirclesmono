@@ -1,0 +1,50 @@
+{
+  "name": "ironfurnace",
+  "version": "1.0.1",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": "20.x",
+    "npm": ">=9.0.0"
+  },
+  "author": "jcader",
+  "license": "ISC",
+  "dependencies": {
+    "@mongoosejs/double": "^0.3.0",
+    "agora-token": "^2.0.5",
+    "aws-sdk": "^2.1225.0",
+    "bcrypt": "^6.0.0",
+    "bluebird": "^3.7.2",
+    "body-parser": "^1.20.3",
+    "connect-multiparty": "^2.2.0",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "crystals-kyber": "^5.1.0",
+    "crystals-kyber-js": "^1.1.1",
+    "dotenv": "^5.0.1",
+    "express": "^4.20.0",
+    "fcm-v1-http2": "^1.0.5",
+    "firebase-admin": "^12.4.0",
+    "google-play-billing-validator": "^2.1.3",
+    "gridfs-stream": "^1.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "moment": "^2.29.4",
+    "mongod": "^2.0.0",
+    "mongodb": "^3.7.4",
+    "mongoose": "^6.13.1",
+    "mongoose-moment": "^0.1.3",
+    "multer": "^2.0.2",
+    "n": "^9.0.0",
+    "node-apple-receipt-verify": "^1.12.1",
+    "node-gcm": "^1.0.5",
+    "node-jsencrypt": "^1.0.0",
+    "passport": "^0.6.0",
+    "passport-jwt": "^4.0.1",
+    "randomstring": "^1.3.0",
+    "touch": "^3.1.1",
+    "uuid": "^8.3.2"
+  }
+}

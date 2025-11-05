@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build outputs
+build/
+dist/
+*.log
+
+# Environment variables
+.env
+.env.local
+
+# Firebase Admin SDK (sensitive credentials)
+ironapi/ironfurnace-a10e7-firebase-adminsdk-p35g8-8cae172dc5.json
+**/firebase-adminsdk-*.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
