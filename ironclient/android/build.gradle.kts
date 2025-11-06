@@ -1,5 +1,5 @@
 buildscript {
-    val kotlinVersion = "1.9.10"
+    val kotlinVersion = "1.9.25"
     repositories {
         google()
         mavenCentral()
@@ -14,6 +14,14 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+    }
+    
+    configurations.all {
+        resolutionStrategy {
+            force("org.jetbrains.kotlin:kotlin-stdlib:1.9.25")
+            force("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.25")
+            force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.25")
+        }
     }
 }
 
