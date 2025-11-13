@@ -6,8 +6,11 @@ import io.flutter.embedding.android.FlutterActivity
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.view.WindowManager.LayoutParams;
 import io.flutter.embedding.engine.FlutterEngine
+import androidx.core.app.ActivityCompat
 
-class MainActivity: FlutterActivity() {
+class MainActivity: FlutterActivity(), ActivityCompat.OnRequestPermissionsResultCallback {
+    private var voicePlatformPlugin: VoicePlatformPlugin? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
 
 
@@ -24,6 +27,8 @@ class MainActivity: FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
         // Register the MediaScannerPlugin
         flutterEngine.plugins.add(MediaScannerPlugin())
+        // Register the custom voice platform channel
+        voicePlatformPlugin = VoicePlatformPlugin(this).also { it.start(flutterEngine) }
     }
 
     override fun onStart() {
@@ -34,5 +39,16 @@ class MainActivity: FlutterActivity() {
     override fun onStop() {
         super.onStop()
         window.decorView.visibility = View.GONE;
+    }
+
+    override fun onDestroy() {
+        voicePlatformPlugin?.stop()
+        voicePlatformPlugin = null
+        super.onDestroy()
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        voicePlatformPlugin?.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 }

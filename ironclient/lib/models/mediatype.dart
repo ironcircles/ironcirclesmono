@@ -34,24 +34,26 @@ class Media {
   bool requireStreaming = false;
   bool tooLarge = false;
   CircleObject? object;
+  Object? attachment;
   bool fromCamera;
   int height;
   int width;
   String name;
 
-  Media(
-      {this.path = '',
-      required this.mediaType,
-      //required this.object,
-      this.thumbnail = '',
-      this.thumbIndex = 0,
-      this.storageID = '',
-      this.object,
-      this.requireStreaming = false,
-      this.height = 0,
-      this.width = 0,
-      this.name = '',
-      this.fromCamera = false}) {
+  Media({
+    this.path = '',
+    required this.mediaType,
+    this.thumbnail = '',
+    this.thumbIndex = 0,
+    this.storageID = '',
+    this.object,
+    this.attachment,
+    this.requireStreaming = false,
+    this.height = 0,
+    this.width = 0,
+    this.name = '',
+    this.fromCamera = false,
+  }) {
     file = File(path);
     seed = const Uuid().v4();
   }

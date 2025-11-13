@@ -1,13 +1,18 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:ironcirclesapp/blocs/voice_input_bloc.dart';
 import 'package:ironcirclesapp/models/export_models.dart';
 import 'package:ironcirclesapp/screens/insidecircle/dialogdisappearing.dart';
 import 'package:ironcirclesapp/screens/themes/mastertheme.dart';
 import 'package:ironcirclesapp/screens/widgets/dialognotice.dart';
+import 'package:ironcirclesapp/screens/widgets/voice_button_widget.dart';
+import 'package:ironcirclesapp/screens/widgets/voice_memo_sheet.dart';
 import 'package:ironcirclesapp/services/cache/filesystem_service.dart';
+import 'package:ironcirclesapp/screens/insidecircle/dialogvoiceoptions.dart';
 
 enum ParentType { circle, vault, feed }
 
@@ -84,6 +89,12 @@ class _InsideCircleTextFieldState extends State<InsideCirclePostWidget> {
   String textChunk = "";
   String tagChunk = "";
 
+  // Voice button state
+  VoiceButtonState _voiceButtonState = VoiceButtonState.idle;
+  double _voiceSoundLevel = 0.0;
+  VoiceInputBloc? _voiceInputBloc;
+  StreamSubscription<VoiceInputState>? _voiceSub;
+
   final spinner = SpinKitThreeBounce(
     size: 20,
     color: globalState.theme.threeBounce,
@@ -92,6 +103,15 @@ class _InsideCircleTextFieldState extends State<InsideCirclePostWidget> {
   @override
   void initState() {
     super.initState();
+    _voiceInputBloc = VoiceInputBloc();
+    _voiceSub = _voiceInputBloc!.stream.listen(_handleVoiceInputState);
+  }
+
+  @override
+  void dispose() {
+    _voiceSub?.cancel();
+    _voiceInputBloc?.dispose();
+    super.dispose();
   }
 
   IconButton buildButtonColumn(
@@ -337,48 +357,67 @@ class _InsideCircleTextFieldState extends State<InsideCirclePostWidget> {
               widget.wall == false
                   ? Align(
                       alignment: Alignment.centerRight,
-                      child: widget.timer == UserDisappearingTimer.OFF &&
-                              _scheduledDate == null
-                          ? IconButton(
-                              icon: Icon(Icons.timer,
-                                  color: globalState.theme.buttonDisabled),
-                              iconSize: 24,
-                              onPressed: () {
-                                _showTimer();
-                              },
-                            )
-                          : Padding(
-                              padding: const EdgeInsets.only(top: 5, right: 10),
-                              child: _scheduledDate != null
-                                  ? buildButtonColumn(
-                                      Icons.timer,
-                                      globalState.theme.bottomHighlightIcon,
-                                      _showTimer,
-                                      widget.timerKey,
-                                      iconSize: 24)
-                                  : InkWell(
-                                      onTap: _showTimer,
-                                      child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.timer,
-                                              color: globalState
-                                                  .theme.bottomHighlightIcon,
-                                              size: 24 -
-                                                  globalState.scaleDownIcons,
-                                            ),
-                                            Text(
-                                              _getShortTimerString(),
-                                              textScaler:
-                                                  const TextScaler.linear(1.0),
-                                              style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: globalState.theme
-                                                      .bottomHighlightIcon),
-                                            )
-                                          ]))))
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 0),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                          // Timer/disappearing messages icon
+                          widget.timer == UserDisappearingTimer.OFF &&
+                                  _scheduledDate == null
+                              ? IconButton(
+                                  icon: Icon(Icons.timer,
+                                      color: globalState.theme.buttonDisabled),
+                                  iconSize: 24,
+                                  onPressed: () {
+                                    _showTimer();
+                                  },
+                                )
+                              : Padding(
+                                  padding: const EdgeInsets.only(top: 5, right: 0),
+                                  child: _scheduledDate != null
+                                      ? buildButtonColumn(
+                                          Icons.timer,
+                                          globalState.theme.bottomHighlightIcon,
+                                          _showTimer,
+                                          widget.timerKey,
+                                          iconSize: 24)
+                                      : InkWell(
+                                          onTap: _showTimer,
+                                          child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  Icons.timer,
+                                                  color: globalState
+                                                      .theme.bottomHighlightIcon,
+                                                  size: 24 -
+                                                      globalState.scaleDownIcons,
+                                                ),
+                                                Text(
+                                                  _getShortTimerString(),
+                                                  textScaler:
+                                                      const TextScaler.linear(1.0),
+                                                  style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: globalState.theme
+                                                          .bottomHighlightIcon),
+                                                )
+                                              ]))),
+                          // Voice button (voice memo / voice-to-text)
+                          Transform.translate(
+                            offset: const Offset(-8, 0),
+                            child: VoiceButtonWidget(
+                              onOptionSelected: _handleVoiceOption,
+                              buttonState: _voiceButtonState,
+                              onStopVoiceMemo: null,
+                              onStopVoiceToText: _stopVoiceToText,
+                              soundLevel: _voiceSoundLevel,
+                            ),
+                          ),
+                        ],
+                      )))
                   : Container(),
 
               // widget.sendEnabled && widget.editing
@@ -421,6 +460,93 @@ class _InsideCircleTextFieldState extends State<InsideCirclePostWidget> {
     DialogDisappearing.setTimer(context, widget.setTimer, _getDateTimeSchedule);
   }
 
+  void _handleVoiceOption(VoiceOption option) async {
+    final bloc = _voiceInputBloc;
+    if (bloc == null) return;
+
+    if (option == VoiceOption.voiceMemo) {
+      await _showVoiceMemoSheet(bloc);
+    } else {
+      try {
+        final started = await bloc.startVoiceToText();
+        if (started) {
+          setState(() {
+            _voiceButtonState = VoiceButtonState.voiceToText;
+          });
+        }
+      } catch (err) {
+        debugPrint('Failed to start voice to text: $err');
+      }
+    }
+  }
+
+  Future<void> _showVoiceMemoSheet(VoiceInputBloc bloc) async {
+    _closeKeyboard();
+    final encrypted = await VoiceMemoSheet.show(context: context, bloc: bloc);
+    if (encrypted != null) {
+      final mediaExtension = Platform.isIOS ? 'm4a' : 'wav';
+      final media = Media(
+        path: encrypted.encryptedFile.path,
+        mediaType: MediaType.file,
+        name: 'voice_memo_${DateTime.now().millisecondsSinceEpoch}.$mediaExtension',
+        attachment: encrypted,
+      );
+      widget.passMediaCollection(media);
+      widget.setSendEnabled(true);
+    }
+  }
+
+  void _handleVoiceInputState(VoiceInputState state) {
+    VoiceButtonState? newButtonState;
+    double? newSoundLevel;
+
+    if (state.voiceToTextActive) {
+      if (_voiceButtonState != VoiceButtonState.voiceToText) {
+        newButtonState = VoiceButtonState.voiceToText;
+      }
+    } else {
+      if (_voiceButtonState == VoiceButtonState.voiceToText) {
+        if (state.partialText.isNotEmpty) {
+          _insertVoiceText(state.partialText);
+          _voiceInputBloc?.clearPartial();
+        }
+        newButtonState = VoiceButtonState.idle;
+      }
+    }
+
+    if ((state.soundLevel - _voiceSoundLevel).abs() > 0.01) {
+      newSoundLevel = state.soundLevel;
+    }
+
+    if (newButtonState != null || newSoundLevel != null) {
+      setState(() {
+        if (newButtonState != null) {
+          _voiceButtonState = newButtonState;
+        }
+        if (newSoundLevel != null) {
+          _voiceSoundLevel = newSoundLevel;
+        }
+      });
+    }
+  }
+
+  void _insertVoiceText(String text) {
+    final controller = widget.message;
+    final selection = controller.selection;
+    final insertPosition = selection.baseOffset >= 0 ? selection.baseOffset : controller.text.length;
+    final newText = controller.text.replaceRange(insertPosition, insertPosition, '$text ');
+    controller.text = newText;
+    controller.selection = TextSelection.collapsed(offset: insertPosition + text.length + 1);
+    widget.setSendEnabled(true);
+  }
+
+  Future<void> _stopVoiceToText() async {
+    final bloc = _voiceInputBloc;
+    if (bloc == null) return;
+    await bloc.stopVoiceToText();
+    setState(() => _voiceButtonState = VoiceButtonState.idle);
+  }
+
   String _getShortTimerString() {
     if (widget.timer == UserDisappearingTimer.ONE_TIME_VIEW) return 'OTV';
     if (widget.timer == UserDisappearingTimer.TEN_SECONDS) return '10s';
@@ -432,10 +558,6 @@ class _InsideCircleTextFieldState extends State<InsideCirclePostWidget> {
     if (widget.timer == UserDisappearingTimer.ONE_DAY) return '24h';
 
     return '';
-  }
-
-  _confirmCancel() {
-    widget.clear(true);
   }
 
   _closeKeyboard() {

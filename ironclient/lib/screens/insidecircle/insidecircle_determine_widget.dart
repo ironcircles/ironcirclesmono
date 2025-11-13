@@ -138,6 +138,25 @@ class InsideCircleDetermineWidget extends StatelessWidget {
     required this.refresh,
   }) : super(key: key);
 
+  bool _isVoiceMemoFile(CircleObject circleObject) {
+    final file = circleObject.file;
+    if (file == null) {
+      return false;
+    }
+    final String name = (file.name ?? '').toLowerCase();
+    final String extension = (file.extension ?? '').toLowerCase();
+    final bool hasWavExtension = extension == 'wav' ||
+        extension == '.wav' ||
+        name.endsWith('.wav');
+    if (!hasWavExtension) {
+      return false;
+    }
+    if (name.isEmpty) {
+      return true;
+    }
+    return name.startsWith('voice_memo_') || name.endsWith('.wav');
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -929,6 +948,13 @@ class InsideCircleDetermineWidget extends StatelessWidget {
     } else if (item.type == CircleObjectType.CIRCLEFILE) {
       populateFile(item, userFurnace, userCircleCache, circleFileBloc);
 
+      final bool isVoiceMemo = _isVoiceMemoFile(item);
+      final bool hasCirclePath = userCircleCache.circlePath != null &&
+          userCircleCache.circlePath!.isNotEmpty;
+      final bool disableTap = isVoiceMemo &&
+          hasCirclePath &&
+          item.fullTransferState == BlobState.READY;
+
       return Column(key: item.globalKey, children: [
         userFurnace.userid == item.creator!.id
             ? GestureDetector(
@@ -947,9 +973,11 @@ class InsideCircleDetermineWidget extends StatelessWidget {
                     ? removeCache
                     : null,);
             },
-            onTap: () {
-              tapHandler(item);
-            },
+            onTap: disableTap
+                ? null
+                : () {
+                    tapHandler(item);
+                  },
 
             child: CircleFileUserWidget(
                 userCircleCache,
@@ -985,9 +1013,11 @@ class InsideCircleDetermineWidget extends StatelessWidget {
                     : null,
               );
             },
-            onTap: () {
-              tapHandler(item);
-            },
+            onTap: disableTap
+                ? null
+                : () {
+                    tapHandler(item);
+                  },
             // onTapDown: storePosition,
             child: CircleFileMemberWidget(
                 userCircleCache,

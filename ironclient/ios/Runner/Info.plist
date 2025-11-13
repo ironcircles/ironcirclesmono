@@ -69,7 +69,9 @@
 	<key>NSHumanReadableCopyright</key>
 	<string></string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>IronCircles needs access to your microphone if you would like to record video</string>
+	<string>IronCircles needs microphone access to record voice memos and voice-to-text messages.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>IronCircles uses speech recognition to convert your voice to text securely.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>IronCircles needs access to your photo library if you want to share photos in circles</string>
 	<key>NSUserActivityTypes</key>

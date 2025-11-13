@@ -6,6 +6,8 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:ironcirclesapp/models/export_models.dart';
 import 'package:ironcirclesapp/screens/insidecircle/insidecircle_widgets/circlefilewidget.dart';
 import 'package:ironcirclesapp/services/cache/filesystem_service.dart';
+import 'package:ironcirclesapp/services/voice_memo_service.dart';
+import 'package:ironcirclesapp/screens/widgets/voice_memo_attachment_chip.dart';
 
 class ImagesPreviewScroller extends StatefulWidget {
   final MediaCollection? mediaCollection;
@@ -54,6 +56,12 @@ class _ImagesPreviewScrollerState extends State<ImagesPreviewScroller> {
                     controller: _scrollController,
                     scrollDirection: Axis.horizontal,
                     itemBuilder: (BuildContext context, int index) {
+                      final media =
+                          widget.mediaCollection!.media[index];
+                      final attachment = media.attachment;
+                      final bool isVoiceMemo =
+                          attachment is EncryptedVoiceMemo;
+
                       return Padding(
                           padding: const EdgeInsets.only(
                               left: 10, right: 10, bottom: 5),
@@ -61,69 +69,81 @@ class _ImagesPreviewScrollerState extends State<ImagesPreviewScroller> {
                               alignment: Alignment.topRight,
                               children: [
                                 InkWell(
-                                    onTap: () => widget.onPress(index),
-                                    child: ConstrainedBox(
-                                        constraints: const BoxConstraints(
-                                            maxHeight: 170, maxWidth: 250),
-                                        child: widget.mediaCollection!
-                                                    .media[index].mediaType ==
-                                                MediaType.file
-                                            ? CircleFileWidget(
+                                    onTap: isVoiceMemo
+                                        ? null
+                                        : () => widget.onPress(index),
+                                    child: Builder(builder: (context) {
+                                      Widget preview;
+                                      if (attachment is EncryptedVoiceMemo) {
+                                        preview = VoiceMemoAttachmentChip(
+                                          memo: attachment,
+                                        );
+                                      } else if (media.mediaType ==
+                                          MediaType.file) {
+                                        preview = CircleFileWidget(
                                             maxWidth: 150,
-                                                extension:
-                                                    FileSystemService.getExtension(
-                                                        widget.mediaCollection!
-                                                            .media[index].path),
-                                                backgroundColor: globalState
-                                                    .theme.userObjectBackground,
-                                            fileSize: widget.mediaCollection!
-                                                .media[index].file.lengthSync(),
-                                                textColor: globalState
-                                                    .theme.userObjectText,
-                                                name:
-                                                    FileSystemService.getFilename(
-                                                        widget.mediaCollection!
-                                                            .media[index].path),
-                                                preview: true)
-                                            : widget
-                                                        .mediaCollection!
-                                                        .media[index]
-                                                        .mediaType ==
-                                                    MediaType.image
-                                                ? _isPreviewCached(File(widget.mediaCollection!.media[index].path))
-                                                    ? Image.file(
-                                                        File(widget
-                                                            .mediaCollection!
-                                                            .media[index]
-                                                            .path),
-                                                        fit: BoxFit.contain,
-                                                      )
-                                                    : spinkit
-                                                : widget.mediaCollection!.media[index].mediaType == MediaType.gif
-                                                    ? CachedNetworkImage(fit: BoxFit.contain, imageUrl: widget.mediaCollection!.media[index].path, placeholder: (context, url) => spinkit, errorWidget: (context, url, error) => const Icon(Icons.error))
-                                                    : _isPreviewCached(File(widget.mediaCollection!.media[index].thumbnail))
-                                                        ? Stack(alignment: Alignment.center, children: [
-                                                            Image.file(
-                                                              File(widget
-                                                                  .mediaCollection!
-                                                                  .media[index]
-                                                                  .thumbnail),
-                                                              fit: BoxFit.cover,
-                                                            ),
-                                                            IconButton(
-                                                              onPressed: null,
-                                                              color: globalState
-                                                                  .theme
-                                                                  .chewiePlayBackground,
-                                                              icon: Icon(
-                                                                  Icons
-                                                                      .play_arrow,
-                                                                  color: globalState
-                                                                      .theme
-                                                                      .chewiePlayForeground),
-                                                            )
-                                                          ])
-                                                        : spinkit)),
+                                            extension:
+                                                FileSystemService.getExtension(
+                                                    media.path),
+                                            backgroundColor: globalState
+                                                .theme.userObjectBackground,
+                                            fileSize: media.file.lengthSync(),
+                                            textColor:
+                                                globalState.theme.userObjectText,
+                                            name: FileSystemService.getFilename(
+                                                media.path),
+                                            preview: true);
+                                      } else if (media.mediaType ==
+                                          MediaType.image) {
+                                        preview = _isPreviewCached(File(media.path))
+                                            ? Image.file(
+                                                File(media.path),
+                                                fit: BoxFit.contain,
+                                              )
+                                            : spinkit;
+                                      } else if (media.mediaType ==
+                                          MediaType.gif) {
+                                        preview = CachedNetworkImage(
+                                          fit: BoxFit.contain,
+                                          imageUrl: media.path,
+                                          placeholder: (context, url) => spinkit,
+                                          errorWidget: (context, url, error) =>
+                                              const Icon(Icons.error),
+                                        );
+                                      } else {
+                                        preview = _isPreviewCached(
+                                                File(media.thumbnail))
+                                            ? Stack(
+                                                alignment: Alignment.center,
+                                                children: [
+                                                    Image.file(
+                                                      File(media.thumbnail),
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                                    IconButton(
+                                                      onPressed: null,
+                                                      color: globalState
+                                                          .theme
+                                                          .chewiePlayBackground,
+                                                      icon: Icon(
+                                                        Icons.play_arrow,
+                                                        color: globalState.theme
+                                                            .chewiePlayForeground,
+                                                      ),
+                                                    )
+                                                  ])
+                                            : spinkit;
+                                      }
+
+                                      return ConstrainedBox(
+                                        constraints: isVoiceMemo
+                                            ? const BoxConstraints(
+                                                maxHeight: 150, maxWidth: 260)
+                                            : const BoxConstraints(
+                                                maxHeight: 170, maxWidth: 250),
+                                        child: preview,
+                                      );
+                                    })),
 
                                 IconButton(
                                   padding: const EdgeInsets.only(left: 25, bottom: 25),

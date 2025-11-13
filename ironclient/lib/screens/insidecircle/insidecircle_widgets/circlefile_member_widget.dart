@@ -7,6 +7,7 @@ import 'package:ironcirclesapp/screens/insidecircle/insidecircle_widgets/circleo
 import 'package:ironcirclesapp/screens/insidecircle/insidecircle_widgets/date.dart';
 import 'package:ironcirclesapp/screens/insidecircle/insidecircle_widgets/pinnedobject.dart';
 import 'package:ironcirclesapp/screens/insidecircle/insidecircle_widgets/shared_functions.dart';
+import 'package:ironcirclesapp/screens/insidecircle/insidecircle_widgets/voice_memo_message_bubble.dart';
 import 'package:ironcirclesapp/screens/widgets/widget_export.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 
@@ -60,6 +61,25 @@ class CircleFileUserWidgetState extends State<CircleFileMemberWidget> {
         color: globalState.theme.threeBounce,
       ));
 
+  bool _isVoiceMemo(CircleObject circleObject) {
+    final file = circleObject.file;
+    if (file == null) {
+      return false;
+    }
+    final String name = (file.name ?? '').toLowerCase();
+    final String extension = (file.extension ?? '').toLowerCase();
+    final bool hasWavExtension = extension == 'wav' ||
+        extension == '.wav' ||
+        name.endsWith('.wav');
+    if (!hasWavExtension) {
+      return false;
+    }
+    if (name.isEmpty) {
+      return true;
+    }
+    return name.startsWith('voice_memo_') || name.endsWith('.wav');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -108,6 +128,22 @@ class CircleFileUserWidgetState extends State<CircleFileMemberWidget> {
         textColor: widget.messageColor,
         showDownload: true,
         preview: false);
+
+    final bool isVoiceMemo = _isVoiceMemo(widget.circleObject);
+    final bool hasCirclePath = widget.userCircleCache.circlePath != null &&
+        widget.userCircleCache.circlePath!.isNotEmpty;
+    final bool canRenderVoiceMemo = isVoiceMemo &&
+        hasCirclePath &&
+        widget.circleObject.fullTransferState == BlobState.READY;
+    final Widget readyContent = canRenderVoiceMemo
+        ? VoiceMemoMessageBubble(
+            circleObject: widget.circleObject,
+            circlePath: widget.userCircleCache.circlePath!,
+            isUser: false,
+            maxWidth: widget.maxWidth,
+            textColor: widget.messageColor,
+          )
+        : fileWidget;
 
     return Padding(
         padding: EdgeInsets.only(
@@ -315,7 +351,7 @@ class CircleFileUserWidgetState extends State<CircleFileMemberWidget> {
                                                                                       ])
                                                                                     ],
                                                                                   )
-                                                                                : fileWidget))
+                                                                            : readyContent))
                                                         : Container()
                                                   ]),
                                               widget.circleObject.file != null

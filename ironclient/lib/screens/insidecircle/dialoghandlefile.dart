@@ -125,40 +125,40 @@ class ItemsToPostState extends State<ItemsToPost> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-        //width: 200,
-        height: 200,
-        child: Scaffold(
-          backgroundColor: globalState.theme.dialogBackground,
-          key: widget.scaffoldKey,
-          resizeToAvoidBottomInset: true,
-          body: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.only(left: 15, top: 5, bottom: 5),
-                  child: ICText(
-                      Platform.isAndroid
-                          ? AppLocalizations.of(context)!.wouldYouLikeToShareOrDownloadItInsteadQuestion
-                          : AppLocalizations.of(context)!.wouldYouLikeToShareItInsteadQuestion,
-                      textScaleFactor: globalState.dialogScaleFactor,
-                      fontSize: 16,
-                      color: globalState.theme.button),
-                ),
-                if (Platform.isAndroid)
-                  _row(AppLocalizations.of(context)!.downloadToMyDevice, Icons.download,
-                      HandleFile.download),
-                _row(AppLocalizations.of(context)!.shareToACircleDM, Icons.share,
-                    HandleFile.inside),
-                _row(
+    return Scaffold(
+      backgroundColor: globalState.theme.dialogBackground,
+      key: widget.scaffoldKey,
+      resizeToAvoidBottomInset: true,
+      body: Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.only(left: 15, top: 5, bottom: 5),
+                child: ICText(
                     Platform.isAndroid
-                        ? AppLocalizations.of(context)!.shareOutsideIronCircles
-                        : AppLocalizations.of(context)!.shareOrDownloadOutsideIronCircles,
-                    Icons.share_outlined,
-                    HandleFile.outside),
-              ]),
-        ));
+                        ? AppLocalizations.of(context)!.wouldYouLikeToShareOrDownloadItInsteadQuestion
+                        : AppLocalizations.of(context)!.wouldYouLikeToShareItInsteadQuestion,
+                    textScaleFactor: globalState.dialogScaleFactor,
+                    fontSize: 16,
+                    color: globalState.theme.button),
+              ),
+              if (Platform.isAndroid)
+                _row(AppLocalizations.of(context)!.downloadToMyDevice, Icons.download,
+                    HandleFile.download),
+              _row(AppLocalizations.of(context)!.shareToACircleDM, Icons.share,
+                  HandleFile.inside),
+              _row(
+                  Platform.isAndroid
+                      ? AppLocalizations.of(context)!.shareOutsideIronCircles
+                      : AppLocalizations.of(context)!.shareOrDownloadOutsideIronCircles,
+                  Icons.share_outlined,
+                  HandleFile.outside),
+            ]),
+      ),
+    );
   }
 }
